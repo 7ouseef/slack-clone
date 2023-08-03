@@ -1,58 +1,83 @@
 import React from 'react';
-import logo from './logo.svg';
-import { Counter } from './features/counter/Counter';
 import './App.css';
+import styled from 'styled-components'
+import {useAuthState} from 'react-firebase-hooks/auth'
+
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+} from "react-router-dom";
+import Header from './components/Header/Header';
+import Sidebar from './components/Sidebar/Sidebar';
+import Chats from './components/Chats/Chats';
+import { auth } from './firebase';
+import Login from './components/Login/Login';
+import Spinner from 'react-spinkit';
+import { useSelector } from 'react-redux';
+import { selectRoomID } from './features/appSlice';
+import SelectRoomID from './components/Chats/SelectRoomID';
 
 function App() {
+
+  const [user,loading] = useAuthState(auth);
+  const roomID = useSelector(selectRoomID);
+
+  if(loading){
+    return(
+      <AppLoading>
+         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Slack_icon_2019.svg/2048px-Slack_icon_2019.svg.png" alt="" />
+         <Spinner name='ball-spin-fade-loader' fadeIn='none' color='purple' />
+      </AppLoading>
+    )
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <Counter />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <span>
-          <span>Learn </span>
-          <a
-            className="App-link"
-            href="https://reactjs.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux-toolkit.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux Toolkit
-          </a>
-          ,<span> and </span>
-          <a
-            className="App-link"
-            href="https://react-redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React Redux
-          </a>
-        </span>
-      </header>
+    <div className='app'>
+      <BrowserRouter>
+
+      {!user ? (
+        <Login />
+      ) : (
+        <>
+        <Header />
+
+        <AppBody>
+
+          <Sidebar />
+          {roomID ? 
+            (<Routes>
+              <Route path='/' exact element={<Chats />} />
+            </Routes>) :
+            (<Routes>
+              <Route path='/' exact element={<SelectRoomID />} />
+            </Routes>)
+          }
+        </AppBody>
+        </>
+      )}
+
+      </BrowserRouter>
     </div>
   );
 }
 
 export default App;
+
+const AppBody = styled.div`
+  display: flex;
+  height: 100vh;
+`;
+
+const AppLoading = styled.div`
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  > img{
+    padding: 20px;
+    height: 100px;
+    margin-bottom: 50px;
+  }
+`;
